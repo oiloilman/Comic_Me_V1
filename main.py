@@ -5,34 +5,18 @@ from PIL import Image
 import requests
 from io import BytesIO
 import streamlit as st
-#import threading
 import numpy as np
-#import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, ClientSettings
-#from PIL import Image
 import cv2
 import imutils
-from neural_style_transfer import get_model_from_path, style_transfer
-#from data import *
+from neural_style_transfer import get_model_from_path, style_transfer 
 
 def image_input(style_model_name):
     style_model_path = style_models_dict[style_model_name]
 
     model = get_model_from_path(style_model_path)
 
-    if st.sidebar.checkbox('Upload'):
-        content_file = st.sidebar.file_uploader("Choose a Content Image", type=["png", "jpg", "jpeg"])
-    else:
-        content_name = st.sidebar.selectbox("Choose the content images:", content_images_name)
-        content_file = content_images_dict[content_name]
-
-    if content_file is not None:
-        content = Image.open(content_file)
-        content = np.array(content) #pil to cv
-        content = cv2.cvtColor(content, cv2.COLOR_RGB2BGR)
-    else:
-        st.warning("Upload an Image OR Untick the Upload Button)")
-        st.stop()
+  
 
     WIDTH = st.sidebar.select_slider('QUALITY (May reduce the speed)', list(range(150, 501, 50)), value=200)
     content = imutils.resize(content, width=WIDTH)
@@ -69,8 +53,7 @@ def image_input(style_model_name):
                 return image
 
             orig_h, orig_w = image.shape[0:2]
-
-            # cv2.resize used in a forked thread may cause memory leaks
+            
             input = np.asarray(Image.fromarray(image).resize((self._width, int(self._width * orig_h / orig_w))))
 
             with self._model_lock:
@@ -90,23 +73,6 @@ def image_input(style_model_name):
     if ctx.video_transformer:
         ctx.video_transformer.set_width(WIDTH)
         ctx.video_transformer.update_model_name(style_model_name)
-
-
-# from streamlit_webrtc import (
-#     AudioProcessorBase,
-#     ClientSettings,
-#     VideoProcessorBase,
-#     WebRtcMode,
-#     webrtc_streamer,
-# )
-# import av
-
-# WEBRTC_CLIENT_SETTINGS = ClientSettings(
-#     rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-#     media_stream_constraints={
-#         "video": True,
-#         "audio": False,
-#     },)
 
 model_path = os.path.join('model','ModelTrainOnKaggle.h5')
 @st.cache
@@ -189,54 +155,5 @@ def main():
                 prediction=  prediction.numpy()
                 with col2:
                     st.image(prediction)
-       
-    #     class OpenCVVideoProcessor(VideoProcessorBase):
-    #         def __init__(self) -> None:
-    #             self._model_lock = threading.Lock()
-    #             self.model = model_load()
-            
-    #         def recv(self, frame: av.VideoFrame):
-
-    #             img = frame.to_ndarray(format="bgr24")
-    #             img = cv2.flip(img, 1)
-    #             frame =loadframe(img)
-    #             frame = self.model(frame, training=True)
-    #             frame = tf.squeeze(frame,0)
-    #             frame = frame* 0.5 + 0.5
-    #             frame = tf.image.resize(frame, 
-    #                         [384, 384],
-    #                         method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-    #             frame = frame.numpy()
-    #             print(type(frame))
-    #             print(frame.shape)
-
-    #             return av.VideoFrame.from_ndarray(frame, format="bgr24")
-
-        
-    #     webrtc_streamer(key="Test",
-    #     client_settings=WEBRTC_CLIENT_SETTINGS,
-    #     async_processing=True,video_processor_factory=OpenCVVideoProcessor,
-
-    # )
-    #    run = st.checkbox('Run')
-    #    FRAMEWINDOW = st.image([])
-    #    camera = cv2.VideoCapture(0)
-    #    gamma = st.slider('Gamma adjust', min_value=0.1, max_value=3.0,value=1.0,step=0.1)
-    #    while run:
-    #        _ , frame = camera.read()
-    #        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    #        frame  = cv2.flip(frame, 1)
-    #        frame = adjust_gamma(frame, gamma=gamma)
-    #        # Framecrop = st.checkbox('Auto Crop Frame')
-    #        frame = loadframe(frame)
-    #        frame = comic_model(frame, training=True)
-    #        frame = tf.squeeze(frame,0)
-    #        frame = frame* 0.5 + 0.5
-    #        frame = tf.image.resize(frame, 
-    #                        [384, 384],
-    #                        method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-    #        frame = frame.numpy()
-    #        FRAMEWINDOW.image(frame)
-
 if __name__ == '__main__':
     main()
